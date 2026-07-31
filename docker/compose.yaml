@@ -27,8 +27,40 @@ services:
     networks:
       - car-platform-network
 
+  postgres:
+    image: postgres:17
+    container_name: car-platform-postgres
+    hostname: postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: car_user
+      POSTGRES_PASSWORD: car_password
+      POSTGRES_DB: car_service_db
+
+    ports:
+      - '5432:5432'
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U car_user -d car_service_db',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      
+    networks:
+      - car-platform-network
+
 volumes:
   rabbitmq_data:
+  postgres_data:
 
 networks:
   car-platform-network:

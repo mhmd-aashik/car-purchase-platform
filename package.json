@@ -9,7 +9,11 @@
     "start:all": "nx run-many --target=serve --projects=api-gateway,car-service,purchase-service --parallel=3",
     "build:all": "nx run-many --target=build --all",
     "test:all": "nx run-many --target=test --all",
-    "graph": "nx graph"
+    "graph": "nx graph",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "drizzle-kit check"
   },
   "private": true,
   "devDependencies": {
@@ -27,7 +31,10 @@
     "@nx/workspace": "23.1.1",
     "@swc/helpers": "~0.5.18",
     "@types/jest": "~30.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.20.1",
+    "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "jest": "~30.3.0",
@@ -46,6 +53,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
     "@nestjs/microservices": "^11.1.28",
     "@nestjs/platform-express": "^11.0.0",
@@ -53,6 +61,8 @@
     "amqplib": "^2.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.22.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0"
   }
