@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-      
+
     networks:
       - car-platform-network
 
@@ -45,24 +45,62 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'pg_isready -U car_user -d car_service_db',
-        ]
+      test: ['CMD-SHELL', 'pg_isready -U car_user -d car_service_db']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-      
+
     networks:
       - car-platform-network
 
+  keycloak-postgres:
+    image: postgres:17
+    container_name: car-platform-keycloak-postgres
+    hostname: keycloak-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+      POSTGRES_DB: keycloak
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U keycloak -d keycloak']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - car-platform-network
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.3 
+    container_name: car-platform-keycloak
+    hostname: keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+
+      KC_HEALTH_ENABLED: 'true'
+    ports:
+      - '8080:8080'
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    networks:
+      - car-platform-network
 
 volumes:
   rabbitmq_data:
   postgres_data:
+  keycloak_postgres_data:
 
 networks:
   car-platform-network:
