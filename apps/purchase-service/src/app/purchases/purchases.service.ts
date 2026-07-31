@@ -20,28 +20,38 @@ export class PurchasesService {
   ) {}
 
   async create(input: CreatePurchaseDto): Promise<Purchase> {
-    const car = await this.findCar(input.carId);
+    const reservedCar = await this.reserveCar(input.carId, input.userId);
 
-    if (car.status !== 'AVAILABLE') {
+    try {
+      const [record] = await this.database
+        .insert(purchases)
+        .values({
+          carId: reservedCar.id,
+          userId: input.userId,
+          carBrand: reservedCar.brand,
+          carModel: reservedCar.model,
+          amount: reservedCar.price.toString(),
+          status: 'COMPLETED',
+        })
+        .returning();
+
+      await this.confirmCarSale(input.carId, input.userId);
+
+      return this.toPurchase(record);
+    } catch (error: unknown) {
+      await this.releaseCarReservationSafely(input.carId, input.userId);
+
+      const rpcError = this.extractRpcError(error);
+
+      if (rpcError.statusCode) {
+        throw error;
+      }
+
       throw new RpcException({
-        statusCode: 409,
-        message: 'Car is not available for purchase',
+        statusCode: 500,
+        message: 'Purchase could not be completed',
       });
     }
-
-    const [record] = await this.database
-      .insert(purchases)
-      .values({
-        carId: car.id,
-        userId: input.userId,
-        carBrand: car.brand,
-        carModel: car.model,
-        amount: car.price.toString(),
-        status: 'COMPLETED',
-      })
-      .returning();
-
-    return this.toPurchase(record);
   }
 
   async findOne(id: string): Promise<Purchase | null> {
@@ -114,5 +124,82 @@ export class PurchasesService {
       createdAt: record.createdAt.toISOString(),
       updatedAt: record.updatedAt.toISOString(),
     };
+  }
+
+  private async reserveCar(
+    carId: string,
+    userId: string,
+  ): Promise<CarResponse> {
+    try {
+      return await firstValueFrom(
+        this.carServiceClient
+          .send<CarResponse>('car.reserve', {
+            carId,
+            userId,
+          })
+          .pipe(timeout(5000)),
+      );
+    } catch (error: unknown) {
+      const rpcError = this.extractRpcError(error);
+
+      if (rpcError.statusCode === 404) {
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Car not found',
+        });
+      }
+
+      if (rpcError.statusCode === 409) {
+        throw new RpcException({
+          statusCode: 409,
+          message: 'Car is not available',
+        });
+      }
+
+      throw new RpcException({
+        statusCode: 503,
+        message: 'Car Service is unavailable',
+      });
+    }
+  }
+
+  private async confirmCarSale(
+    carId: string,
+    userId: string,
+  ): Promise<CarResponse> {
+    try {
+      return await firstValueFrom(
+        this.carServiceClient
+          .send<CarResponse>('car.confirm-sale', {
+            carId,
+            userId,
+          })
+          .pipe(timeout(5000)),
+      );
+    } catch {
+      throw new RpcException({
+        statusCode: 503,
+        message:
+          'Purchase was recorded, but the car sale could not be confirmed',
+      });
+    }
+  }
+
+  private async releaseCarReservationSafely(
+    carId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.carServiceClient
+          .send('car.release-reservation', {
+            carId,
+            userId,
+          })
+          .pipe(timeout(5000)),
+      );
+    } catch {
+      //
+    }
   }
 }

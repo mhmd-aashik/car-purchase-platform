@@ -28,6 +28,8 @@ export interface CarResponse {
   price: number;
   color: string;
   status: 'AVAILABLE' | 'RESERVED' | 'SOLD';
+  reservedBy: string | null;
+  reservedUntil: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -8,6 +8,13 @@
       "when": 1785522724260,
       "tag": "0000_salty_grey_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785531333840,
+      "tag": "0001_chubby_lightspeed",
+      "breakpoints": true
     }
   ]
 }

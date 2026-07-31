@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "purchases_car_id_unique" ON "purchases" USING btree ("car_id");
