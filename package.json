@@ -2,7 +2,15 @@
   "name": "@car-purchase-platform/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start:gateway": "nx serve api-gateway",
+    "start:car": "nx serve car-service",
+    "start:purchase": "nx serve purchase-service",
+    "start:all": "nx run-many --target=serve --projects=api-gateway,car-service,purchase-service --parallel=3",
+    "build:all": "nx run-many --target=build --all",
+    "test:all": "nx run-many --target=test --all",
+    "graph": "nx graph"
+  },
   "private": true,
   "devDependencies": {
     "@eslint/js": "^9.8.0",
