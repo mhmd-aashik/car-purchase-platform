@@ -2,6 +2,7 @@ import { UpdateCarDto } from '../dto/update-car.dto';
 
 export const CAR_STATUS = {
   AVAILABLE: 'AVAILABLE',
+  RESERVED: 'RESERVED',
   SOLD: 'SOLD',
 } as const;
 

@@ -1,8 +1,12 @@
-import { timestamp, uuid } from 'drizzle-orm/pg-core';
-import { numeric } from 'drizzle-orm/pg-core';
-import { varchar } from 'drizzle-orm/pg-core';
-import { pgTable } from 'drizzle-orm/pg-core';
-import { pgEnum } from 'drizzle-orm/pg-core';
+import {
+  integer,
+  numeric,
+  pgEnum,
+  pgTable,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 export const carStatusEnum = pgEnum('car_status', [
   'AVAILABLE',
@@ -17,6 +21,7 @@ export const cars = pgTable('cars', {
   price: numeric('price', { precision: 12, scale: 2 }).notNull(),
   color: varchar('color', { length: 50 }).notNull(),
   status: carStatusEnum('status').default('AVAILABLE').notNull(),
+  year: integer('year').notNull(),
 
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .defaultNow()

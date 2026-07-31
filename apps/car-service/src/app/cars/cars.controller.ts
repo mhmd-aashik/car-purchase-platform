@@ -14,18 +14,18 @@ export class CarsController {
   constructor(private readonly carsService: CarsService) {}
 
   @MessagePattern('car.create')
-  create(@Payload() payload: CreateCarDto): Car {
+  create(@Payload() payload: CreateCarDto): Promise<Car> {
     return this.carsService.create(payload);
   }
 
   @MessagePattern('car.find-all')
-  findAll(): Car[] {
+  findAll(): Promise<Car[]> {
     return this.carsService.findAll();
   }
 
   @MessagePattern('car.find-one')
-  findOne(@Payload() payload: FindCarPayload): Car {
-    const car = this.carsService.findOne(payload.id);
+  async findOne(@Payload() payload: FindCarPayload): Promise<Car> {
+    const car = await this.carsService.findOne(payload.id);
 
     if (!car) {
       throw new RpcException({
@@ -38,8 +38,8 @@ export class CarsController {
   }
 
   @MessagePattern('car.update')
-  update(@Payload() payload: UpdateCarPayload): Car {
-    const car = this.carsService.update(payload.id, payload.data);
+  async update(@Payload() payload: UpdateCarPayload): Promise<Car> {
+    const car = await this.carsService.update(payload.id, payload.data);
 
     if (!car) {
       throw new RpcException({
@@ -52,11 +52,11 @@ export class CarsController {
   }
 
   @MessagePattern('car.remove')
-  remove(@Payload() payload: RemoveCarPayload): {
+  async remove(@Payload() payload: RemoveCarPayload): Promise<{
     deleted: boolean;
     id: string;
-  } {
-    const deleted = this.carsService.remove(payload.id);
+  }> {
+    const deleted = await this.carsService.remove(payload.id);
 
     if (!deleted) {
       throw new RpcException({
@@ -76,11 +76,13 @@ export class CarsController {
     service: string;
     status: string;
     transport: string;
+    database: string;
   } {
     return {
       service: 'car-service',
       status: 'running',
       transport: 'rabbitmq',
+      database: 'postgresql',
     };
   }
 }
