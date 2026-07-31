@@ -23,6 +23,14 @@ export const cars = pgTable('cars', {
   status: carStatusEnum('status').default('AVAILABLE').notNull(),
   year: integer('year').notNull(),
 
+  reservedBy: varchar('reserved_by', {
+    length: 255,
+  }),
+  reservedUntil: timestamp('reserved_until', {
+    withTimezone: true,
+    mode: 'date',
+  }),
+
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .defaultNow()
     .notNull(),

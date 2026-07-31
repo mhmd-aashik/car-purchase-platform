@@ -16,6 +16,8 @@ export interface Car {
   price: number;
   color: string;
   status: CarStatus;
+  reservedBy: string | null;
+  reservedUntil: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -31,4 +33,19 @@ export interface UpdateCarPayload {
 
 export interface RemoveCarPayload {
   id: string;
+}
+
+export interface ReserveCarPayload {
+  carId: string;
+  userId: string;
+}
+
+export interface ConfirmCarSalePayload {
+  carId: string;
+  userId: string;
+}
+
+export interface ReleaseCarReservationPayload {
+  carId: string;
+  userId: string;
 }
