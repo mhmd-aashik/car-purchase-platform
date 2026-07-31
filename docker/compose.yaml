@@ -58,6 +58,8 @@ services:
     networks:
       - car-platform-network
 
+
+
 volumes:
   rabbitmq_data:
   postgres_data:

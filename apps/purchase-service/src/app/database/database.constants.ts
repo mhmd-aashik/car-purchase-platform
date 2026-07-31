@@ -1,0 +1,1 @@
+export const PURCHASE_DATABASE = Symbol('PURCHASE_DATABASE');
