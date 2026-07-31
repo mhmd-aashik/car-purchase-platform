@@ -11,6 +11,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { Public } from '../auth/decorators/public.decorator';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { catchError, firstValueFrom, throwError, timeout } from 'rxjs';
@@ -32,6 +33,7 @@ export class CarsController {
     return this.send<Car[]>('car.find-all', {});
   }
 
+  @Public()
   @Get('health')
   getHealth(): Promise<{
     service: string;

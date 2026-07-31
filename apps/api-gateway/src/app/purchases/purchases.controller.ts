@@ -12,6 +12,9 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom, timeout } from 'rxjs';
 
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import { AuthUser } from '../auth/types';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 
 @Controller('purchases')
@@ -22,10 +25,17 @@ export class PurchasesController {
   ) {}
 
   @Post()
-  create(@Body() input: CreatePurchaseDto): Promise<Purchase> {
-    return this.send<Purchase>('purchase.create', input);
+  create(
+    @Body() input: CreatePurchaseDto,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Purchase> {
+    return this.send<Purchase>('purchase.create', {
+      carId: input.carId,
+      userId: user.userId,
+    });
   }
 
+  @Public()
   @Get('health')
   getHealth(): Promise<{
     service: string;
@@ -36,9 +46,11 @@ export class PurchasesController {
     return this.send('purchase.health', {});
   }
 
-  @Get('user/:userId')
-  findByUser(@Param('userId') userId: string): Promise<Purchase[]> {
-    return this.send<Purchase[]>('purchase.find-by-user', { userId });
+  @Get('me')
+  findMine(@CurrentUser() user: AuthUser): Promise<Purchase[]> {
+    return this.send<Purchase[]>('purchase.find-by-user', {
+      userId: user.userId,
+    });
   }
 
   @Get(':id')
