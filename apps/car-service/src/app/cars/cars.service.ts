@@ -127,6 +127,27 @@ export class CarsService {
     return record ? this.toCar(record) : null;
   }
 
+  async confirmSale(carId: string, userId: string): Promise<Car | null> {
+    const [record] = await this.database
+      .update(cars)
+      .set({
+        status: 'SOLD',
+        reservedBy: null,
+        reservedUntil: null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(cars.id, carId),
+          eq(cars.status, 'RESERVED'),
+          eq(cars.reservedBy, userId),
+        ),
+      )
+      .returning();
+
+    return record ? this.toCar(record) : null;
+  }
+
   private toCar(record: CarRecord): Car {
     return {
       id: record.id,

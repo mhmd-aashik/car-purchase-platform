@@ -3,8 +3,11 @@ import { CarsService } from './cars.service';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import {
   Car,
+  ConfirmCarSalePayload,
   FindCarPayload,
+  ReleaseCarReservationPayload,
   RemoveCarPayload,
+  ReserveCarPayload,
   UpdateCarPayload,
 } from './types/car.types';
 import { CreateCarDto } from './dto/create-car.dto';
@@ -69,6 +72,66 @@ export class CarsController {
       deleted: true,
       id: payload.id,
     };
+  }
+
+  @MessagePattern('car.reserve')
+  async reserve(@Payload() payload: ReserveCarPayload): Promise<Car> {
+    const car = await this.carsService.reserve(payload.carId, payload.userId);
+
+    if (!car) {
+      const existingCar = await this.carsService.findOne(payload.carId);
+
+      if (!existingCar) {
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Car not found',
+        });
+      }
+
+      throw new RpcException({
+        statusCode: 409,
+        message: 'Car is not available',
+      });
+    }
+
+    return car;
+  }
+
+  @MessagePattern('car.confirm-sale')
+  async confirmSale(@Payload() payload: ConfirmCarSalePayload): Promise<Car> {
+    const car = await this.carsService.confirmSale(
+      payload.carId,
+      payload.userId,
+    );
+
+    if (!car) {
+      throw new RpcException({
+        statusCode: 409,
+        message: 'Car reservation cannot be confirmed',
+      });
+    }
+
+    return car;
+  }
+
+  @MessagePattern('car.release-reservation')
+  async releaseReservation(
+    @Payload()
+    payload: ReleaseCarReservationPayload,
+  ): Promise<Car> {
+    const car = await this.carsService.releaseReservation(
+      payload.carId,
+      payload.userId,
+    );
+
+    if (!car) {
+      throw new RpcException({
+        statusCode: 409,
+        message: 'Car reservation cannot be released',
+      });
+    }
+
+    return car;
   }
 
   @MessagePattern('car.health')
