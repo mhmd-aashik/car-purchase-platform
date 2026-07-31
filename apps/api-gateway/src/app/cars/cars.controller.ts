@@ -14,7 +14,6 @@ import { ClientProxy } from '@nestjs/microservices';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { catchError, firstValueFrom, throwError, timeout } from 'rxjs';
-import { error } from 'console';
 
 @Controller('cars')
 export class CarsController {
