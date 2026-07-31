@@ -10,10 +10,12 @@
     "build:all": "nx run-many --target=build --all",
     "test:all": "nx run-many --target=test --all",
     "graph": "nx graph",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "db:check": "drizzle-kit check"
+    "db:car:generate": "drizzle-kit generate --config=drizzle.car.config.ts",
+    "db:car:migrate": "drizzle-kit migrate --config=drizzle.car.config.ts",
+    "db:car:studio": "drizzle-kit studio --config=drizzle.car.config.ts",
+    "db:purchase:generate": "drizzle-kit generate --config=drizzle.purchase.config.ts",
+    "db:purchase:migrate": "drizzle-kit migrate --config=drizzle.purchase.config.ts",
+    "db:purchase:studio": "drizzle-kit studio --config=drizzle.purchase.config.ts"
   },
   "private": true,
   "devDependencies": {
