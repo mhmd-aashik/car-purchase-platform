@@ -22,8 +22,10 @@ export class PurchasesService {
   async create(input: CreatePurchaseDto): Promise<Purchase> {
     const reservedCar = await this.reserveCar(input.carId, input.userId);
 
+    let purchaseRecord: PurchaseRecord | null = null;
+
     try {
-      const [record] = await this.database
+      [purchaseRecord] = await this.database
         .insert(purchases)
         .values({
           carId: reservedCar.id,
@@ -31,25 +33,52 @@ export class PurchasesService {
           carBrand: reservedCar.brand,
           carModel: reservedCar.model,
           amount: reservedCar.price.toString(),
-          status: 'COMPLETED',
+          status: 'PENDING',
         })
         .returning();
 
       await this.confirmCarSale(input.carId, input.userId);
 
-      return this.toPurchase(record);
+      const [completedRecord] = await this.database
+        .update(purchases)
+        .set({
+          status: 'COMPLETED',
+          updatedAt: new Date(),
+        })
+        .where(eq(purchases.id, purchaseRecord.id))
+        .returning();
+
+      return this.toPurchase(completedRecord);
     } catch (error: unknown) {
-      await this.releaseCarReservationSafely(input.carId, input.userId);
+      if (!purchaseRecord) {
+        await this.releaseCarReservationSafely(input.carId, input.userId);
+      }
+
+      /*
+       * When a purchase record exists, leave it PENDING.
+       * A later retry mechanism can determine whether the
+       * car is RESERVED or SOLD and finish the workflow.
+       */
 
       const rpcError = this.extractRpcError(error);
 
-      if (rpcError.statusCode) {
-        throw error;
+      if (rpcError.statusCode === 404) {
+        throw new RpcException({
+          statusCode: 404,
+          message: rpcError.message ?? 'Car not found',
+        });
+      }
+
+      if (rpcError.statusCode === 409) {
+        throw new RpcException({
+          statusCode: 409,
+          message: rpcError.message ?? 'Car is not available',
+        });
       }
 
       throw new RpcException({
-        statusCode: 500,
-        message: 'Purchase could not be completed',
+        statusCode: 503,
+        message: 'Purchase is pending and will require reconciliation',
       });
     }
   }
