@@ -1,0 +1,35 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: car-platform-rabbitmq
+    hostname: rabbitmq
+    restart: unless-stopped
+
+    environment:
+      RABBITMQ_DEFAULT_USER: car_user
+      RABBITMQ_DEFAULT_PASS: car_password
+      RABBITMQ_DEFAULT_VHOST: car_platform
+
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+      
+    networks:
+      - car-platform-network
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  car-platform-network:
+    driver: bridge
