@@ -1,3 +1,5 @@
+import { UpdateCarDto } from '../dto/update-car.dto';
+
 export const CAR_STATUS = {
   AVAILABLE: 'AVAILABLE',
   SOLD: 'SOLD',
@@ -15,4 +17,17 @@ export interface Car {
   status: CarStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FindCarPayload {
+  id: string;
+}
+
+export interface UpdateCarPayload {
+  id: string;
+  data: UpdateCarDto;
+}
+
+export interface RemoveCarPayload {
+  id: string;
 }
