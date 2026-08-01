@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { desc, eq } from 'drizzle-orm';
 import { firstValueFrom, timeout } from 'rxjs';
@@ -8,6 +8,8 @@ import { PurchaseDatabase } from '../database/database.types';
 import { PurchaseRecord, purchases } from '../database/schema';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { Purchase, CarResponse } from './types/purchase.types';
+import { randomUUID } from 'node:crypto';
+import { PurchaseCompletedEvent } from './events/purchase-completed.event';
 
 @Injectable()
 export class PurchasesService {
@@ -17,7 +19,12 @@ export class PurchasesService {
 
     @Inject('CAR_SERVICE')
     private readonly carServiceClient: ClientProxy,
+
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationClient: ClientProxy,
   ) {}
+
+  private readonly logger = new Logger(PurchasesService.name);
 
   async create(input: CreatePurchaseDto): Promise<Purchase> {
     const reservedCar = await this.reserveCar(input.carId, input.userId);
@@ -48,7 +55,11 @@ export class PurchasesService {
         .where(eq(purchases.id, purchaseRecord.id))
         .returning();
 
-      return this.toPurchase(completedRecord);
+      const completedPurchase = this.toPurchase(completedRecord);
+
+      this.publishPurchaseCompleted(completedPurchase, input.userEmail);
+
+      return completedPurchase;
     } catch (error: unknown) {
       if (!purchaseRecord) {
         await this.releaseCarReservationSafely(input.carId, input.userId);
@@ -81,6 +92,35 @@ export class PurchasesService {
         message: 'Purchase is pending and will require reconciliation',
       });
     }
+  }
+
+  private publishPurchaseCompleted(
+    purchase: Purchase,
+    userEmail: string,
+  ): void {
+    const event: PurchaseCompletedEvent = {
+      eventId: randomUUID(),
+      eventType: 'purchase.completed',
+      occurredAt: new Date().toISOString(),
+      data: {
+        purchaseId: purchase.id,
+        carId: purchase.carId,
+        userId: purchase.userId,
+        userEmail,
+        carBrand: purchase.carBrand,
+        carModel: purchase.carModel,
+        amount: purchase.amount,
+      },
+    };
+
+    this.notificationClient.emit('purchase.completed', event).subscribe({
+      error: (error: unknown) => {
+        this.logger.error(
+          `Failed to publish purchase.completed for purchase ${purchase.id}`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      },
+    });
   }
 
   async findOne(id: string): Promise<Purchase | null> {
