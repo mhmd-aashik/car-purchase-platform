@@ -16,6 +16,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthUser } from '../auth/types';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { BadRequestException } from '@nestjs/common';
 
 @Controller('purchases')
 export class PurchasesController {
@@ -29,6 +30,12 @@ export class PurchasesController {
     @Body() input: CreatePurchaseDto,
     @CurrentUser() user: AuthUser,
   ): Promise<Purchase> {
+    if (!user.email) {
+      throw new BadRequestException(
+        'Your account must have an email address before purchasing',
+      );
+    }
+
     return this.send<Purchase>('purchase.create', {
       carId: input.carId,
       userId: user.userId,

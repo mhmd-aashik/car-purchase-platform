@@ -21,6 +21,21 @@ import { PurchasesService } from './purchases.service';
           },
         },
       },
+      {
+        name: 'NOTIFICATION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URL ??
+              'amqp://car_user:car_password@localhost:5672/car_platform',
+          ],
+          queue: 'notification_service_queue',
+          queueOptions: {
+            durable: true,
+          },
+          persistent: true,
+        },
+      },
     ]),
   ],
   controllers: [PurchasesController],
