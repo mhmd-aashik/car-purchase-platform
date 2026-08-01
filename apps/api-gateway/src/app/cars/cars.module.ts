@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AnalyticsModule } from '../analytics/analytics.module';
 import { CarsController } from './cars.controller';
 
 @Module({
   imports: [
+    AnalyticsModule,
     ClientsModule.register([
       {
         name: 'CAR_SERVICE',

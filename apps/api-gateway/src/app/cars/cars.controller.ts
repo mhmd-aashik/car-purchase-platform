@@ -11,16 +11,21 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { AuthUser } from '../auth/types';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { catchError, firstValueFrom, throwError, timeout } from 'rxjs';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Controller('cars')
 export class CarsController {
   constructor(
     @Inject('CAR_SERVICE')
     private readonly carServiceClient: ClientProxy,
+
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   @Post()
@@ -45,8 +50,25 @@ export class CarsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Car> {
-    return this.send<Car>('car.find-one', { id });
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<Car> {
+    const car = await this.send<Car>('car.find-one', { id });
+
+    this.analyticsService.capture({
+      distinctId: user.userId,
+      event: 'car_viewed',
+      properties: {
+        carId: car.id,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        price: car.price,
+      },
+    });
+
+    return car;
   }
 
   @Patch(':id')
