@@ -74,7 +74,7 @@ services:
       - car-platform-network
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.6.3 
+    image: quay.io/keycloak/keycloak:26.6.3
     container_name: car-platform-keycloak
     hostname: keycloak
     restart: unless-stopped
@@ -107,6 +107,31 @@ services:
       - '8025:8025'
     networks:
       - car-platform-network
+
+  kong:
+    image: kong/kong-gateway:3.12
+    container_name: car-platform-kong
+    hostname: kong
+    restart: unless-stopped
+
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+
+    ports:
+      - '8000:8000'
+      - '8001:8001'
+
+    volumes:
+      - ./kong/kong.yml:/etc/kong/kong.yml:ro
 
 volumes:
   rabbitmq_data:
