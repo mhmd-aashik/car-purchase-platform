@@ -28,6 +28,7 @@ export class CarsController {
     return this.send<Car>('car.create', input);
   }
 
+  @Public()
   @Get()
   findAll(): Promise<Car[]> {
     return this.send<Car[]>('car.find-all', {});

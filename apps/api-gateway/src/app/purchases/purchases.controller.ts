@@ -39,6 +39,7 @@ export class PurchasesController {
     return this.send<Purchase>('purchase.create', {
       carId: input.carId,
       userId: user.userId,
+      userEmail: user.email,
     });
   }
 
